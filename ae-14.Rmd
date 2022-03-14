@@ -369,15 +369,15 @@ set.seed(101321)
 
 
 ```{r null-dist}
-#null_dist_2 <- manhattan %>%
-  #specify(response = ______) %>%
-  #hypothesize(null = ______, mu = ______) %>%
-  #generate(reps = 100, type = "bootstrap") %>%
-  #calculate(stat = _____)
+null_dist_2 <- manhattan %>%
+  specify(response = rent) %>%
+  hypothesize(null = "point", mu = 3000) %>%
+  generate(reps = 100, type = "bootstrap") %>%
+  calculate(stat = "mean")
 ```
 
 ```{r null-dist-viz}
-# visualize(null_dist_2)
+ visualize(null_dist_2)
 ```
 
 ## Exercise 3
@@ -385,30 +385,30 @@ set.seed(101321)
 Fill in the code and uncomment the lines below to calculate the p-value using the null distribution from Exercise 2.
 
 ```{r calc-mean}
-#mean_rent <- manhattan %>% 
- # summarise(mean_rent = mean(rent)) %>%
-  #pull()
+mean_rent <- manhattan %>%
+  summarise(mean_rent = mean(rent)) %>%
+  pull()
 ```
 
 ```{r calc-pvalue}
-#null_dist_2 %>%
- # get_p_value(obs_stat = ___ , direction = "____")
+nulldist_2 %>%
+  get_p_value(obs_stat = mean_rent, direction = "less")
 
 ```
 
 Fill in the direction in the code below and uncomment to visualize the shaded area used to calculate the p-value. 
 
 ```{r pvalue-viz}
-#visualize(null_dist_2) +
- # shade_p_value(obs_stat = mean_rent, direction = "______")
+visualize(null_dist_2) +
+  shade_p_value(obs_stat = mean_rent, direction = "less")
 ```
 
 Let's think about what's happening when we run `get_p_value`. Fill in the code below to calculate the p-value "manually" using some of the `dplyr` functions we've learned. 
 
 ```{r calc-pvalue-manual}
-#null_dist2 %>%
-#  filter(_____) %>%
-#  summarise(p_value = ______)
+null_dist_2 %>%
+  filter(stat < 2625.8) %>%
+  summarise(p_value = n()/100)
 
 ```
 
@@ -428,13 +428,15 @@ a. Null hypothesis
 b. Alternative hypothesis
 c. Null distribution
 d. p-value 
+B and D are correct
 
 ## Exercise 6
 
 Let's test the claim in Exercise 5. Conduct the hypothesis test, then state your conclusion in the context of the data. 
 
 ```{r test-not-equal}
-## add code
+null_dist_2 %>%
+  get_p_value(obs_stat = mean_rent, direction = "two sided")
 ```
 
 ## Exercise 7
@@ -442,7 +444,8 @@ Let's test the claim in Exercise 5. Conduct the hypothesis test, then state your
 Create a new variable `over2500` that indicates whether or not the rent is greater than $2500. 
 
 ```{r new-var}
-# add code
+manhattan <- manhattan %>%
+  mutate(over2500 = ifelse(rent >= 2500, "greater", "less"))
 ```
 
 Suppose you are interested in testing whether a majority of one-bedroom apartments in Manhattan have rent greater than $2500. 
@@ -452,21 +455,28 @@ Suppose you are interested in testing whether a majority of one-bedroom apartmen
 - Fill in the code to generate the null distribution. 
 
 ```{r prop-null}
-#null_dist_3 <- ____ %>%
-#  specify(response = ____, success = "_____") %>%
-#  hypothesize(null = "point", p = ____) %>%
-#  generate(reps = 100, type = "simulate") %>%
-#  calculate(stat = "prop")
+null_dist_3 <- manhattan %>%
+  specify(response = over2500, success = "greater") %>%
+  hypothesize(null = "point", p = .5) %>%
+  generate(reps = 100, type = "draw") %>%
+  calculate(stat = "prop")
 ```
 
 - Visualize the null distribution and shade in the area used to calculate the p-value. 
 
 ```{r prop-null-viz}
-# add code 
+obs_stat_2 <- manhattan %>%
+  filter(over2500 == "greater") %>%
+  nrow() / nrow(manhattan)
+
+visualize(null_dist_3) +
+  shade_p_value(obs_stat = obs_stat_2, direction = "greater") +
+  labs(x = "Sample Probability", y = "Count")
 ```
 
 - Calculate your p-value. Then use the p-value to make your conclusion using a significance level of 0.05.
 
 ```{r prop-calc-p-value}
-# add code
+null_dist_3 %>%
+  get_p_value(obs_stat = obs_stat_2, direction = "greater")
 ```
